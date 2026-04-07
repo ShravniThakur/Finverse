@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+    --color-card: #3A1C71;
+    --color-cardHover: #4B2A85;
+    --color-button: #7F5AF0;
+    --color-buttonHover: #9A7DFF;
+    --color-bodyText: #E6E6EB ;
+    --color-heading: #FFFFFF ;
+    --color-borderColour: #3F345F ;
+}
+:root {
+    background-color: #000000;
+    background-image: url('./assets/design.jpeg');
+}
+::-webkit-scrollbar{
+    display: none;
+}
