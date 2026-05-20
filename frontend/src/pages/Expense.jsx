@@ -4,13 +4,13 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useState } from "react"
 import { useEffect } from "react"
+import { assets } from "../assets/assets"
 import { Chart } from 'chart.js/auto'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { useNavigate } from 'react-router-dom'
-import { assets } from "../assets/assets"
-import AssetIcon from "../components/AssetIcon"
 
 const Expense = () => {
+
     const { token, backend_url } = useContext(AppContext)
     const navigate = useNavigate()
 
@@ -26,264 +26,419 @@ const Expense = () => {
     const [type, setType] = useState('Wallet')
     const [amount, setAmount] = useState('')
     const [selectedTransaction, setSelectedTransaction] = useState(null)
-    const [loading, setLoading] = useState(true)
+
+    const getExpenseData = async () => {
+        try {
+            const response = await axios.get(backend_url + '/expense/get-expense-data', {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                setTotalExpense(response.data.totalExpense)
+                setWalletExpense(response.data.walletExpense)
+                setCashExpense(response.data.cashExpense)
+            }
+            else toast.error(response.data.message)
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
+    }
+    const getExpenseList = async () => {
+        try {
+            const response = await axios.get(backend_url + '/expense/get-expense-list', {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                setExpenseList(response.data.response.reverse())
+            }
+            else toast.error(response.data.message)
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
+    }
+    const getMonthlyExpenses = async () => {
+        try {
+            const response = await axios.get(backend_url + '/expense/get-monthly-expenses', {
+                headers: {
+                    Authorization: token
+                },
+                params: {
+                    year: Number(year)
+                }
+            })
+            if (response.data.success) {
+                setMonthly(response.data.monthly)
+            }
+            else toast.error(response.data.message)
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
+    }
+    const getCategoryExpenses = async () => {
+        try {
+            const response = await axios.get(backend_url + '/expense/get-category-expenses', {
+                headers: {
+                    Authorization: token
+                },
+            })
+            if (response.data.success) {
+                setCategoryExpenses(response.data.categoryExpenses)
+            }
+            else toast.error(response.data.message)
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
+    }
+
+    const addExpenseHandler = async (e) => {
+        e.preventDefault()
+        try {
+            const response = await axios.post(backend_url + '/expense/add-expense', { title, category, type, amount: Number(amount) }, {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                getExpenseData()
+                getExpenseList()
+                getMonthlyExpenses()
+                getCategoryExpenses()
+                setTitle('')
+                setCategory("Food")
+                setType("Wallet")
+                setAmount('')
+                setAddExpenseButton(false)
+                window.scrollTo({ top: 0, behavior: "smooth" })
+                toast.success(response.data.message)
+            }
+            else toast.error(response.data.message)
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
+    }
 
     const [year, setYear] = useState(new Date().getFullYear())
     const y = new Date().getFullYear()
 
-    const getExpenseData = async () => {
-        try {
-            const response = await axios.get(backend_url + '/expense/get-expense-data', { headers: { Authorization: token } })
-            if (response.data.success) { setTotalExpense(response.data.totalExpense); setWalletExpense(response.data.walletExpense); setCashExpense(response.data.cashExpense) }
-            else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
-    }
-    const getExpenseList = async () => {
-        try {
-            const response = await axios.get(backend_url + '/expense/get-expense-list', { headers: { Authorization: token } })
-            if (response.data.success) setExpenseList(response.data.response.reverse())
-            else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
-    }
-    const getMonthlyExpenses = async () => {
-        try {
-            const response = await axios.get(backend_url + '/expense/get-monthly-expenses', { headers: { Authorization: token }, params: { year: Number(year) } })
-            if (response.data.success) setMonthly(response.data.monthly)
-            else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
-    }
-    const getCategoryExpenses = async () => {
-        try {
-            const response = await axios.get(backend_url + '/expense/get-category-expenses', { headers: { Authorization: token } })
-            if (response.data.success) setCategoryExpenses(response.data.categoryExpenses)
-            else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
-    }
-    const addExpenseHandler = async (e) => {
-        e.preventDefault()
-        try {
-            const response = await axios.post(backend_url + '/expense/add-expense', { title, category, type, amount: Number(amount) }, { headers: { Authorization: token } })
-            if (response.data.success) {
-                getExpenseData(); getExpenseList(); getMonthlyExpenses(); getCategoryExpenses()
-                setTitle(''); setCategory("Food"); setType("Wallet"); setAmount(''); setAddExpenseButton(false)
-                window.scrollTo({ top: 0, behavior: "smooth" }); toast.success(response.data.message)
-            } else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
-    }
-
     useEffect(() => {
         if (token) {
-            setLoading(true)
-            Promise.all([getExpenseData(), getExpenseList(), getMonthlyExpenses(), getCategoryExpenses()]).finally(() => setLoading(false))
+            getExpenseData()
+            getExpenseList()
+            getMonthlyExpenses()
+            getCategoryExpenses()
         }
     }, [token, year])
 
-    const SkeletonCard = () => (
-        <div className="glass-card p-5 animate-pulse">
-            <div className="h-3 w-24 rounded mb-4" style={{ background: 'rgba(255,255,255,0.08)' }}></div>
-            <div className="h-8 w-32 rounded" style={{ background: 'rgba(255,255,255,0.08)' }}></div>
-        </div>
-    )
-
-    const SectionHeader = ({ title }) => (
-        <div className="section-header">
-            <div className="accent-bar"></div>
-            <p>{title}</p>
-        </div>
-    )
-
-    const categories = ["Food","Groceries","Housing","Bills & Utilities","Transportation","Entertainment","Shopping","Health","Education","Travel","Investments & Savings","Fees & Charges","Others"]
-
     return (
-        <div className="flex flex-col gap-10 sm:gap-12 text-bodyText font-sans m-5 sm:m-7">
-            <div className="flex flex-col gap-1">
-                <p className="text-3xl font-bold text-white tracking-tight">Expenses</p>
-                <p className="text-sm text-[#8888A0]">Track and analyze your spending patterns</p>
-            </div>
-
+        <div className="flex flex-col gap-10 sm:gap-15 text-bodyText font-serif m-5">
+            <p className="text-3xl font-bold"> Expenses 💸 </p>
             {/* Quick Stats */}
-            <div className="flex flex-col gap-5">
-                <SectionHeader title="Quick Stats" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                    {loading ? [1,2,3].map(i => <SkeletonCard key={i} />) : (
-                        <>
-                            {[
-                                { label: 'Total Expense', value: `Rs. ${totalExpense}`, icon: assets.expenses.TotalExpense, cls: 'text-[#F87171]' },
-                                { label: 'Wallet Expense', value: `Rs. ${walletExpense}`, icon: assets.expenses.WalletExpense, cls: 'text-[#FBBF24]' },
-                                { label: 'Cash Expense', value: `Rs. ${cashExpense}`, icon: assets.expenses.CashExpense, cls: 'text-[#FBBF24]' },
-                            ].map(({ label, value, icon, cls }) => (
-                                <div key={label} className="glass-card p-5 flex flex-col gap-4">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-xs font-semibold text-[#8888A0] uppercase tracking-wider">{label}</p>
-                                        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(127,90,240,0.15)' }}><AssetIcon src={icon} size={18} /></div>
-                                    </div>
-                                    <p className={`text-3xl font-bold ${cls}`}>{value}</p>
-                                </div>
-                            ))}
-                        </>
-                    )}
+            <div className="flex flex-col gap-10">
+                <div className="flex gap-4 items-center">
+                    <img className="w-8 h-8" src={assets.dashboard.QuickStats}></img>
+                    <p className="text-xl font-bold text-purple-300">Quick Stats</p>
                 </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-col gap-5">
-                <SectionHeader title="Quick Actions" />
-                <button onClick={() => { setAddExpenseButton(true); setTitle(''); setCategory("Food"); setType("Wallet"); setAmount('') }}
-                    className="btn-primary flex items-center gap-2 w-fit">
-                    <AssetIcon src={assets.expenses.AddExpense} size={16} /> Add Expense
-                </button>
-            </div>
-
-            {/* Add Expense Modal */}
-            {addExpenseButton && (
-                <div className="fixed inset-0 z-50 backdrop-blur-md flex justify-center items-center" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => setAddExpenseButton(false)}>
-                    <div className="glass-card p-6 w-80 sm:w-96 flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                        <p className="text-xl font-bold text-white text-center">Add <span className="text-[#7F5AF0]">Expense</span></p>
-                        <form onSubmit={addExpenseHandler} className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-[#8888A0]">Title</p>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="fin-input" placeholder="Enter title" />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-[#8888A0]">Category</p>
-                                <select onChange={e => setCategory(e.target.value)} className="fin-input">
-                                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-[#8888A0]">Type</p>
-                                <select onChange={e => setType(e.target.value)} className="fin-input">
-                                    <option value="Wallet">Wallet</option>
-                                    <option value="Cash">Cash</option>
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-[#8888A0]">Amount</p>
-                                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="fin-input" placeholder="Enter amount" />
-                            </div>
-                            <button type="submit" className="btn-primary w-full">Add Expense</button>
-                            <button type="button" onClick={() => setAddExpenseButton(false)} className="btn-secondary w-full">Cancel</button>
-                        </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                    <div className=" border border-gray-300 flex flex-col gap-3 bg-card rounded-xl p-5 hover:scale-103 hover:bg-cardHover transition-all duration-300 shadow-[0_0_100px_rgba(168,85,247,0.6)]">
+                        <div className="flex gap-4 items-center">
+                            <img className="w-8 h-8" src={assets.expenses.TotalExpense}></img>
+                            <p className="text-xl">Total Expense</p>
+                        </div>
+                        <p className="font-bold text-2xl">Rs. {totalExpense}</p>
+                    </div>
+                    <div className="border border-gray-300 flex flex-col gap-3 bg-card rounded-xl p-5 hover:scale-103 hover:bg-cardHover transition-all duration-300 shadow-[0_0_100px_rgba(168,85,247,0.6)]">
+                        <div className="flex gap-4 items-center">
+                            <img className="w-8 h-8" src={assets.expenses.WalletExpense}></img>
+                            <p className="text-xl"> Wallet Expense</p>
+                        </div>
+                        <p className="font-bold text-2xl"> Rs. {walletExpense} </p>
+                    </div>
+                    <div className="border border-gray-300 flex flex-col gap-3 bg-card rounded-xl p-5 hover:scale-103 hover:bg-cardHover transition-all duration-300 shadow-[0_0_100px_rgba(168,85,247,0.6)]">
+                        <div className="flex gap-4 items-center">
+                            <img className="w-8 h-8" src={assets.expenses.CashExpense}></img>
+                            <p className="text-xl"> Cash Expense</p>
+                        </div>
+                        <p className="font-bold text-2xl"> Rs. {cashExpense} </p>
                     </div>
                 </div>
-            )}
-
-            {/* Monthly Expense Chart */}
-            <div className="flex flex-col gap-5">
-                <SectionHeader title="Monthly Expense Activity" />
-                <div className="flex gap-3 items-center">
-                    <p className="text-sm font-medium text-[#8888A0]">Filter by year</p>
-                    <select onChange={e => setYear(e.target.value)} className="fin-input" style={{ width: 'auto', padding: '6px 12px' }}>
-                        {Array.from({ length: 10 }, (_, i) => y - i).map(yr => <option key={yr} value={yr}>{yr}</option>)}
+            </div>
+            {/* Quick Actions */}
+            <div className="flex flex-col gap-10">
+                <div className="flex gap-4 items-center">
+                    <img className="w-8 h-8" src={assets.dashboard.QuickActions}></img>
+                    <p className="text-xl font-bold text-purple-300">Quick Actions</p>
+                </div>
+                <div onClick={() => { setAddExpenseButton(true); setTitle(''); setCategory("Food"); setType("Wallet"); setAmount('') }} className="w-54 bg-card rounded-full px-5 py-2 hover:scale-103 hover:bg-cardHover transition-all duration-300 flex gap-4 items-center justify-center">
+                    <img className="w-8 h-8" src={assets.expenses.AddExpense}></img>
+                    <p className="text-xl">Add Expense</p>
+                </div>
+                {
+                    addExpenseButton && <div className="fixed inset-0 z-50 backdrop-blur-sm flex justify-center items-center">
+                        <div className="w-70 p-7 sm:w-100 sm:p-10 bg-card rounded-xl border border-gray-300">
+                            <form onSubmit={addExpenseHandler} className="flex flex-col gap-3 sm:gap-4">
+                                <p className="text-2xl sm:text-3xl font-bold text-center"> Add <span className="text-purple-300"> Expense </span> </p>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-sm sm:text-base font-bold">Title</p>
+                                    <input type="text" value={title} onChange={(e) => { setTitle(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-8 sm:h-9 w-full rounded-md p-1" />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-sm sm:text-base font-bold">Category</p>
+                                    <select onChange={(e) => { setCategory(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-9 w-full rounded-md p-1">
+                                        <option value="Food">Food</option>
+                                        <option value="Groceries">Groceries</option>
+                                        <option value="Housing">Housing</option>
+                                        <option value="Bills & Utilities">Bills & Utilities</option>
+                                        <option value="Transportation">Transportation</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Shopping">Shopping</option>
+                                        <option value="Health">Health</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Travel">Travel</option>
+                                        <option value="Investments & Savings">Investments & Savings</option>
+                                        <option value="Fees & Charges">Fees & Charges</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-sm sm:text-base font-bold">Type</p>
+                                    <select onChange={(e) => { setType(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-9 w-full rounded-md p-1">
+                                        <option value="Wallet">Wallet</option>
+                                        <option value="Cash">Cash</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-sm sm:text-base font-bold">Amount</p>
+                                    <input type="number" value={amount} onChange={(e) => { setAmount(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-8 sm:h-9 w-full rounded-md p-1" />
+                                </div>
+                                <div className="flex flex-col gap-3 mt-3">
+                                    <button type="submit" className="text-sm sm:text-lg w-full bg-button p-1 hover:bg-buttonHover rounded-md font-bold"> Add Expense </button>
+                                    <button type="button" onClick={() => { setAddExpenseButton(false) }} className="text-sm sm:text-lg w-full bg-button p-1 hover:bg-buttonHover rounded-md font-bold">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+            {/* Monthly Expense Activty */}
+            <div className="flex flex-col gap-10">
+                <div className="flex gap-4 items-center">
+                    <img className="w-8 h-8" src={assets.dashboard.Monthly}></img>
+                    <p className="text-xl font-bold text-purple-300">Monthly Expense List</p>
+                </div>
+                <div className="flex gap-2 items-center">
+                    <p className="font-bold"> Filter by year </p>
+                    <select onChange={(e) => { setYear(e.target.value) }} className="bg-card border border-borderColour p-1 rounded-lg">
+                        <option value={y}> {y} </option>
+                        <option value={y - 1}> {y - 1} </option>
+                        <option value={y - 2}> {y - 2} </option>
+                        <option value={y - 3}> {y - 3} </option>
+                        <option value={y - 4}> {y - 4} </option>
+                        <option value={y - 5}> {y - 5} </option>
+                        <option value={y - 6}> {y - 6} </option>
+                        <option value={y - 7}> {y - 7} </option>
+                        <option value={y - 8}> {y - 8} </option>
+                        <option value={y - 9}> {y - 9} </option>
                     </select>
                 </div>
-                <div className="glass-card p-4 overflow-x-auto">
-                    <div className="min-w-[600px] h-64 sm:h-80">
+                <div className="w-full overflow-x-auto bg-black">
+                    <div className="min-w-150 h-70 sm:h-100">
                         <Bar data={{
-                            labels: monthly.map(m => m.month),
+                            labels: monthly.map((m) => m.month),
                             datasets: [
-                                { label: "Total Expense", data: monthly.map(m => m.totalExpense), backgroundColor: "#A78BFA" },
-                                { label: "Wallet Expense", data: monthly.map(m => m.walletExpense), backgroundColor: "#4ADE80" },
-                                { label: "Cash Expense", data: monthly.map(m => m.cashExpense), backgroundColor: "#F87171" }
+                                {
+                                    label: "Total Expense",
+                                    data: monthly.map((m) => m.totalExpense),
+                                    backgroundColor: "#A78BFA",
+
+                                },
+                                {
+                                    label: "Wallet Expense",
+                                    data: monthly.map((m) => m.walletExpense),
+                                    backgroundColor: "#2CB67D",
+                                },
+                                {
+                                    label: "Cash Expense",
+                                    data: monthly.map((m) => m.cashExpense),
+                                    backgroundColor: "#EF4444",
+                                }
                             ]
                         }} options={{
-                            responsive: true, maintainAspectRatio: false,
+                            responsive: true,
+                            maintainAspectRatio: false,
                             plugins: {
-                                legend: { labels: { color: "#C4C4CF" } },
-                                tooltip: { titleColor: "#ffffff", bodyColor: "#e5e7eb", backgroundColor: "rgba(15,0,32,0.95)" },
+                                legend: {
+                                    labels: {
+                                        color: "#efecf3ff",
+                                    },
+                                },
+                                tooltip: {
+                                    titleColor: "#ffffff",
+                                    bodyColor: "#e5e7eb",
+                                    backgroundColor: "#3A1C71",
+                                },
                             },
                             scales: {
-                                x: { ticks: { color: "#8888A0" }, grid: { color: "rgba(255,255,255,0.05)" } },
-                                y: { ticks: { color: "#8888A0" }, grid: { color: "rgba(255,255,255,0.05)" } },
+                                x: {
+                                    ticks: {
+                                        color: "#ffffff",
+                                    },
+                                    grid: {
+                                        color: "#3F345F",
+                                    },
+                                },
+                                y: {
+                                    ticks: {
+                                        color: "#ffffff",
+                                    },
+                                    grid: {
+                                        color: "#3F345F",
+                                    },
+                                },
                             },
                         }}></Bar>
                     </div>
                 </div>
             </div>
+            {/* Category Wise Expense */}
+            <div>
+                <div className="flex flex-col gap-10">
+                    <div className="flex gap-4 items-center">
+                        <img className="w-8 h-8" src={assets.expenses.Category}></img>
+                        <p className="text-xl font-bold text-purple-300">Category Wise Expenses</p>
+                    </div>
+                    <div className="flex justify-start overflow-x-auto">
+                        <div className="h-70 min-w-210">
+                            <Doughnut data={{
+                                labels: categoryExpenses.map((c) => c.name),
+                                datasets: [
+                                    {
+                                        label: "Total Expense",
+                                        data: categoryExpenses.map((c) => c.amount),
+                                        backgroundColor: ["#2CB67D", 
+                                            "#38BDF8", 
+                                            "#7F5AF0", 
+                                            "#F59E0B", 
+                                            "#3B82F6",  
+                                            "#EC4899",  
+                                            "#A855F7", 
+                                            "#EF4444", 
+                                            "#22C55E",  
+                                            "#06B6D4", 
+                                            "#FACC15", 
+                                            "#6366F1",  
+                                            "#9CA3AF",]
 
-            {/* Category Wise Expenses */}
-            <div className="flex flex-col gap-5">
-                <SectionHeader title="Category Wise Expenses" />
-                <div className="glass-card p-4 overflow-x-auto">
-                    <div className="h-64 min-w-[500px]">
-                        <Doughnut data={{
-                            labels: categoryExpenses.map(c => c.name),
-                            datasets: [{
-                                label: "Total Expense",
-                                data: categoryExpenses.map(c => c.amount),
-                                backgroundColor: ["#2CB67D","#38BDF8","#7F5AF0","#F59E0B","#3B82F6","#EC4899","#A855F7","#EF4444","#22C55E","#06B6D4","#FACC15","#6366F1","#9CA3AF"]
-                            }]
-                        }} options={{
-                            responsive: true, maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: "right", labels: { color: "#C4C4CF", boxWidth: 12, padding: 20 } },
-                                tooltip: { titleColor: "#ffffff", bodyColor: "#e5e7eb", backgroundColor: "rgba(15,0,32,0.95)" },
-                            },
-                            cutout: "60%",
-                        }}></Doughnut>
+                                    },
+                                ]
+                            }} options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: "right",
+                                        labels: {
+                                            color: "#E6E6EB",
+                                            boxWidth: 12,
+                                            padding: 30
+                                        },
+                                    },
+                                    tooltip: {
+                                        titleColor: "#ffffff",
+                                        bodyColor: "#e5e7eb",
+                                        backgroundColor: "#3A1C71",
+                                    },
+                                },
+                                cutout: "60%",
+                            }} ></Doughnut>
+                        </div>
                     </div>
                 </div>
             </div>
-
             {/* All Expenses */}
-            <div className="flex flex-col gap-5">
-                <div className="flex items-center justify-between">
-                    <SectionHeader title="All Expenses" />
-                    <button onClick={() => navigate('/transactions')} className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1">
-                        View All <AssetIcon src={assets.website.Arrow} size={12} />
-                    </button>
+            <div className="flex flex-col gap-10">
+                <div className="flex gap-4 items-center">
+                    <img className="w-8 h-8" src={assets.expenses.ExpenseList}></img>
+                    <p className="text-xl font-bold text-purple-300">All Expenses</p>
                 </div>
-                <div className="glass-card overflow-hidden">
-                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 px-4 py-3" style={{ background: 'rgba(127,90,240,0.15)' }}>
-                        {['Date','Title','Category','Type','Amount'].map(h => (
-                            <p key={h} className="text-xs font-semibold text-[#8888A0] uppercase tracking-widest">{h}</p>
-                        ))}
+                <div className="flex gap-3 items-center">
+                    <p className="font-bold"> View All Expenses </p>
+                    <button onClick={() => { navigate('/transactions') }} className="bg-button px-3 py-1 rounded-full hover:scale-105 transition-all duration-300"> VIEW </button>
+                </div>
+                <div className="border border-borderColour bg-black">
+                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 font-bold p-2 bg-card border border-borderColour">
+                        <p>Date</p>
+                        <p>Title</p>
+                        <p>Category</p>
+                        <p>Type</p>
+                        <p>Amount</p>
+                  
                     </div>
-                    {expenseList.slice(0, 50).map((t, index) => (
-                        <div key={index}>
-                            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
-                                <p className="text-[#8888A0]">{new Date(t.date).getDate()}-{new Date(t.date).getMonth() + 1}-{new Date(t.date).getFullYear()}</p>
-                                <p className="text-white font-medium truncate">{t.title}</p>
-                                <p className="text-[#C4C4CF]">{t.category} {t.categoryEmoji}</p>
-                                <p className="text-[#C4C4CF]">{t.type} {t.typeEmoji}</p>
-                                <p className="text-[#F87171] font-semibold">Rs. {t.amount}</p>
-                            </div>
-                            <div className="flex md:hidden px-4 py-3 items-center justify-between hover:bg-white/[0.03]" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
-                                <div>
-                                    <p className="text-sm text-white font-medium">{t.title}</p>
-                                    <p className="text-sm font-semibold text-[#F87171]">Rs. {t.amount}</p>
+                    {
+                        expenseList.slice(0, 50).map((t,index) => {
+                            return (
+                                <div key={index}>
+                                    <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 p-2 border border-borderColour hover:border-violet-400 transition-all duration-300">
+                                        <p>{new Date(t.date).getDate()}-{new Date(t.date).getMonth() + 1}-{new Date(t.date).getFullYear()}</p>
+                                        <p>{t.title}</p>
+                                        <p> {t.category} {t.categoryEmoji}</p>
+                                        <p>{t.type} {t.typeEmoji}</p>
+                                        <p>Rs. {t.amount}</p>
+                                   
+                                    </div>
+                                    <div className="flex flex-col gap-3 md:hidden">
+                                        <div className="px-5 py-2 flex items-center justify-between border border-borderColour hover:border-violet-400 transition-all duration-300">
+                                            <div>
+                                                <p>{t.title}</p>
+                                                <p>Rs. {t.amount}</p>
+                                            </div>
+                                            <button onClick={() => setSelectedTransaction(t)} className="border border-button py-1 px-2 rounded-full">VIEW</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button onClick={() => setSelectedTransaction(t)} className="btn-secondary text-xs px-3 py-1.5">VIEW</button>
+                            )
+                        })
+                    }
+                    {
+                        selectedTransaction &&
+                        <div className="fixed inset-0 z-50 flex justify-center items-center backdrop-blur-sm">
+                            <div className="bg-card border w-70 p-7 flex flex-col gap-3 rounded-xl">
+                                <p className="text-center text-purple-300 font-bold text-2xl"> Expense </p>
+                                <div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Date : </p>
+                                        <p>{new Date(selectedTransaction.date).getDate()}-{new Date(selectedTransaction.date).getMonth() + 1}-{new Date(selectedTransaction.date).getFullYear()}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Title :</p>
+                                        <p>{selectedTransaction.title}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Category :</p>
+                                        <p>{selectedTransaction.categoryEmoji} {selectedTransaction.category}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Type :</p>
+                                        <p>{selectedTransaction.type} {selectedTransaction.typeEmoji}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Amount :</p>
+                                        <p>Rs. {selectedTransaction.amount}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedTransaction(null)} className="bg-button hover:bg-buttonHover p-1 w-full rounded-lg text-xl font-bold"> Close </button>
                             </div>
                         </div>
-                    ))}
+                    }
                 </div>
             </div>
-
-            {/* Mobile Bottom Sheet */}
-            {selectedTransaction && (
-                <div className="fixed inset-0 z-50 flex flex-col justify-end backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => setSelectedTransaction(null)}>
-                    <div className="slide-up rounded-t-2xl p-6 flex flex-col gap-4" style={{ background: '#0f0020', borderTop: '1px solid rgba(127,90,240,0.3)' }} onClick={e => e.stopPropagation()}>
-                        <div className="w-10 h-1 rounded-full mx-auto mb-2" style={{ background: 'rgba(127,90,240,0.4)' }}></div>
-                        <p className="text-center text-white font-bold text-xl">Expense</p>
-                        <div className="flex flex-col gap-3">
-                            {[
-                                { label: 'Date', val: `${new Date(selectedTransaction.date).getDate()}-${new Date(selectedTransaction.date).getMonth() + 1}-${new Date(selectedTransaction.date).getFullYear()}` },
-                                { label: 'Title', val: selectedTransaction.title },
-                                { label: 'Category', val: `${selectedTransaction.categoryEmoji} ${selectedTransaction.category}` },
-                                { label: 'Type', val: `${selectedTransaction.type} ${selectedTransaction.typeEmoji}` },
-                                { label: 'Amount', val: `Rs. ${selectedTransaction.amount}` },
-                            ].map(({ label, val }) => (
-                                <div key={label} className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
-                                    <p className="text-xs font-semibold text-[#8888A0] uppercase tracking-wider">{label}</p>
-                                    <p className="text-sm text-white">{val}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <button onClick={() => setSelectedTransaction(null)} className="btn-primary w-full mt-2">Close</button>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

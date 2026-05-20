@@ -1,161 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-    --color-surface:      rgba(255, 255, 255, 0.04);
-    --color-surfaceHover: rgba(255, 255, 255, 0.08);
-    --color-card:         rgba(120, 80, 220, 0.12);
-    --color-cardHover:    rgba(120, 80, 220, 0.2);
-    --color-button:       #7F5AF0;
-    --color-buttonHover:  #9A7DFF;
-    --color-bodyText:     #C4C4CF;
-    --color-heading:      #FFFFFF;
-    --color-border:       rgba(127, 90, 240, 0.25);
-    --color-borderColour: rgba(127, 90, 240, 0.25);
-    --color-accent:       #7F5AF0;
-    --color-success:      #4ADE80;
-    --color-danger:       #F87171;
-    --color-warning:      #FBBF24;
-    --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    --color-card: #3A1C71;
+    --color-cardHover: #4B2A85;
+    --color-button: #7F5AF0;
+    --color-buttonHover: #9A7DFF;
+    --color-bodyText: #E6E6EB ;
+    --color-heading: #FFFFFF ;
+    --color-borderColour: #3F345F ;
 }
-
 :root {
-    background: 
-        radial-gradient(ellipse at top left, #1a0533 0%, #000000 60%),
-        radial-gradient(ellipse at bottom right, #0d0020 0%, #000000 60%);
-    background-attachment: fixed;
-    font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+    background-color: #000000;
     background-image: url('./assets/design.jpeg');
 }
-
-/* Glass Card reusable utility */
-.glass-card {
-    background: rgba(120, 80, 220, 0.12);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(127, 90, 240, 0.25);
-    border-radius: 16px;
-    transition: all 0.25s ease;
-}
-.glass-card:hover {
-    background: rgba(120, 80, 220, 0.2);
-    border-color: rgba(127, 90, 240, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(127, 90, 240, 0.15);
-}
-
-/* Input style utility */
-.fin-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(127, 90, 240, 0.25);
-    border-radius: 12px;
-    padding: 10px 16px;
-    color: #ffffff;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s ease;
-    outline: none;
-}
-.fin-input::placeholder {
-    color: #555570;
-}
-.fin-input:focus {
-    border-color: #7F5AF0;
-    box-shadow: 0 0 0 3px rgba(127, 90, 240, 0.15);
-}
-.fin-input option {
-    background: #0f0020;
-    color: #ffffff;
-}
-
-/* Primary button utility */
-.btn-primary {
-    background: #7F5AF0;
-    color: #ffffff;
-    font-weight: 600;
-    padding: 10px 24px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    font-family: 'DM Sans', sans-serif;
-    border: none;
-    cursor: pointer;
-}
-.btn-primary:hover {
-    background: #9A7DFF;
-    box-shadow: 0 0 20px rgba(127, 90, 240, 0.4);
-}
-.btn-primary:active {
-    transform: scale(0.95);
-}
-
-/* Secondary button utility */
-.btn-secondary {
-    background: transparent;
-    color: #7F5AF0;
-    font-weight: 500;
-    padding: 10px 24px;
-    border-radius: 12px;
-    border: 1px solid rgba(127, 90, 240, 0.4);
-    transition: all 0.2s ease;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-}
-.btn-secondary:hover {
-    background: rgba(127, 90, 240, 0.1);
-}
-
-/* Destructive button utility */
-.btn-danger {
-    background: transparent;
-    color: #F87171;
-    font-weight: 500;
-    padding: 10px 24px;
-    border-radius: 12px;
-    border: 1px solid rgba(248, 113, 113, 0.4);
-    transition: all 0.2s ease;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-}
-.btn-danger:hover {
-    background: rgba(248, 113, 113, 0.1);
-}
-
-/* Bottom sheet slide-up animation */
-@keyframes slideUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-.slide-up {
-    animation: slideUp 0.3s ease forwards;
-}
-
-/* Section header accent bar pattern */
-.section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-.section-header .accent-bar {
-    width: 4px;
-    height: 20px;
-    background: #7F5AF0;
-    border-radius: 999px;
-    flex-shrink: 0;
-}
-.section-header p {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #8888A0;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-/* Scrollbar hidden */
-::-webkit-scrollbar {
+::-webkit-scrollbar{
     display: none;
-}
-
-/* Date input dark theme */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.5);
 }

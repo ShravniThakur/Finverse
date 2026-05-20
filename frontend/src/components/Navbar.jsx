@@ -3,16 +3,9 @@ import { assets } from "../assets/assets"
 
 const Navbar = () => {
     const navigate = useNavigate()
-
     return (
-        <div className="h-14 flex items-center px-4 sm:px-6">
-            {/* Logo */}
-            <img
-                onClick={() => { navigate('/') }}
-                className="h-8 w-auto cursor-pointer object-contain"
-                src={assets.website.Finverse}
-                alt="Finverse"
-            />
+        <div className="border-b border-borderColour p-2">
+            <img onClick={()=>{navigate('/')}} className="w-50" src={assets.website.Finverse}></img>
         </div>
     )
 }

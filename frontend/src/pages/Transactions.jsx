@@ -5,7 +5,7 @@ import { toast } from 'react-toastify'
 import { useState } from "react"
 import { useEffect } from "react"
 import { assets } from "../assets/assets"
-import AssetIcon from "../components/AssetIcon"
+
 
 const Transactions = () => {
     const { token, backend_url } = useContext(AppContext)
@@ -27,184 +27,173 @@ const Transactions = () => {
             if (minAmt) params.minAmt = Number(minAmt)
             if (maxAmt) params.maxAmt = Number(maxAmt)
 
-            const response = await axios.get(backend_url + '/transaction/all-transactions', { headers: { Authorization: token }, params })
-            if (response.data.success) setTransactions(response.data.transactions.reverse())
+            const response = await axios.get(backend_url + '/transaction/all-transactions', {
+                headers: {
+                    Authorization: token
+                },
+                params
+            })
+            if (response.data.success) {
+                setTransactions(response.data.transactions.reverse())
+            }
             else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
     }
 
-    useEffect(() => { allTransactions() }, [token, toDate, fromDate, minAmt, maxAmt, source])
-
-    const sources = ['All', 'Wallet', 'Expense', 'Group']
-    const [activeSource, setActiveSource] = useState('All')
-
-    const handleSourceFilter = (s) => {
-        setActiveSource(s)
-        setSource(s === 'All' ? '' : s)
-    }
-
-    const getStatusBadge = (status) => {
-        const map = { 'Completed': 'bg-green-500/10 text-green-400', 'Pending': 'bg-yellow-500/10 text-yellow-400', 'Not Applicable': 'bg-gray-500/10 text-gray-400' }
-        return map[status] || 'bg-gray-500/10 text-gray-400'
-    }
-
-    const SectionHeader = ({ title }) => (
-        <div className="section-header">
-            <div className="accent-bar"></div>
-            <p>{title}</p>
-        </div>
-    )
+    useEffect(() => {
+        allTransactions()
+    }, [token, toDate, fromDate, minAmt, maxAmt, source])
 
     return (
-        <div className="flex flex-col gap-10 sm:gap-12 text-bodyText font-sans m-5 sm:m-7">
-            <div className="flex flex-col gap-1">
-                <p className="text-3xl font-bold text-white tracking-tight">Transactions</p>
-                <p className="text-sm text-[#8888A0]">View and filter your complete transaction history</p>
-            </div>
-
-            {/* Filter Bar */}
-            <div className="flex flex-col gap-4">
-                {/* Source Pills */}
-                <div className="flex flex-wrap gap-2">
-                    {sources.map(s => (
-                        <button
-                            key={s}
-                            onClick={() => handleSourceFilter(s)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                                activeSource === s
-                                    ? 'text-white'
-                                    : 'text-[#8888A0] hover:text-white'
-                            }`}
-                            style={activeSource === s
-                                ? { background: '#7F5AF0' }
-                                : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(127,90,240,0.15)' }
-                            }
-                        >{s}</button>
-                    ))}
+        <div className="flex flex-col gap-10 sm:gap-15 text-bodyText font-serif m-5">
+            <p className="text-3xl font-bold"> Transactions 🔁 </p>
+            <div className="hidden lg:flex flex-wrap gap-5 text-xs">
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-bold text-purple-300">From Date</p>
+                    <input className="w-29 bg-card border border-violet-400 p-1 rounded-md [color-scheme:dark]" onChange={(e) => { setFromDate(e.target.value) }} value={fromDate} type="date" />
                 </div>
-
-                {/* Desktop Filters */}
-                <div className="hidden lg:flex flex-wrap gap-4">
-                    {[
-                        { label: 'From Date', val: fromDate, setter: setFromDate, type: 'date' },
-                        { label: 'To Date', val: toDate, setter: setToDate, type: 'date' },
-                        { label: 'Min Amount', val: minAmt, setter: setMinAmt, type: 'number' },
-                        { label: 'Max Amount', val: maxAmt, setter: setMaxAmt, type: 'number' },
-                    ].map(({ label, val, setter, type }) => (
-                        <div key={label} className="flex flex-col gap-1">
-                            <p className="text-xs font-medium text-[#8888A0]">{label}</p>
-                            <input
-                                type={type}
-                                value={val}
-                                onChange={e => setter(e.target.value)}
-                                className="fin-input [color-scheme:dark]"
-                                style={{ padding: '6px 12px', width: type === 'date' ? '160px' : '120px' }}
-                            />
-                        </div>
-                    ))}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-bold text-purple-300">To Date</p>
+                    <input className="w-29 bg-card border border-violet-400 p-1 rounded-md [color-scheme:dark]" onChange={(e) => { setToDate(e.target.value) }} value={toDate} type="date" />
                 </div>
-
-                {/* Mobile Filter Toggle */}
-                <div className="flex flex-col gap-3 lg:hidden">
-                    <button
-                        onClick={() => setFilter(!filter)}
-                        className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl w-fit transition-all duration-200 ${filter ? 'text-white' : 'text-[#8888A0]'}`}
-                        style={filter
-                            ? { background: 'rgba(127,90,240,0.2)', border: '1px solid rgba(127,90,240,0.4)' }
-                            : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,90,240,0.15)' }
-                        }
-                    >
-                        <AssetIcon src={assets.transactions.Source} size={14} /> Filters {filter ? '▲' : '▼'}
-                    </button>
-                    {filter && (
-                        <div className="flex flex-wrap gap-3">
-                            {[
-                                { label: 'From Date', val: fromDate, setter: setFromDate, type: 'date' },
-                                { label: 'To Date', val: toDate, setter: setToDate, type: 'date' },
-                                { label: 'Min Amount', val: minAmt, setter: setMinAmt, type: 'number' },
-                                { label: 'Max Amount', val: maxAmt, setter: setMaxAmt, type: 'number' },
-                            ].map(({ label, val, setter, type }) => (
-                                <div key={label} className="flex flex-col gap-1">
-                                    <p className="text-xs font-medium text-[#8888A0]">{label}</p>
-                                    <input
-                                        type={type}
-                                        value={val}
-                                        onChange={e => setter(e.target.value)}
-                                        className="fin-input [color-scheme:dark]"
-                                        style={{ padding: '6px 12px', width: type === 'date' ? '150px' : '110px' }}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-bold text-purple-300"> Min Amount</p>
+                    <input className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setMinAmt(e.target.value) }} value={minAmt} type="number" />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-bold text-purple-300">Max Amount</p>
+                    <input className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setMaxAmt(e.target.value) }} value={maxAmt} type="number" />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-bold text-purple-300">From Date</p>
+                    <select className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setSource(e.target.value) }}>
+                        <option value="Wallet">Wallet</option>
+                        <option value="Expense">Expense</option>
+                        <option value="Group">Group</option>
+                    </select>
                 </div>
             </div>
-
-            {/* Transactions Table */}
-            <div className="flex flex-col gap-5">
-                <SectionHeader title={`All Transactions (${transactions.length})`} />
-                <div className="glass-card overflow-hidden">
-                    <div className="hidden lg:grid grid-cols-[0.5fr_1.5fr_0.8fr_1.5fr_1fr_0.8fr_1fr] gap-3 px-4 py-3" style={{ background: 'rgba(127,90,240,0.15)' }}>
-                        {['Date','Title','Source','Category','Type','Amount','Status'].map(h => (
-                            <p key={h} className="text-xs font-semibold text-[#8888A0] uppercase tracking-widest">{h}</p>
-                        ))}
+            <div className="flex flex-col gap-5 lg:hidden">
+                {
+                    filter ? <button onClick={() => { setFilter(false) }} className="text-center px-2 py-1 bg-button border border-violet-400 w-20 font-bold p-2 rounded-full">Filters</button> : <button onClick={() => { setFilter(true) }} className="text-center border border-violet-400 w-20 font-bold px-2 py-1 rounded-full">Filters</button>
+                }
+                {
+                    filter && <div className="flex flex-wrap gap-3 text-xs">
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-bold text-purple-300">From Date</p>
+                            <input className="w-29 bg-card border border-violet-400 p-1 rounded-md [color-scheme:dark]" onChange={(e) => { setFromDate(e.target.value) }} value={fromDate} type="date" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-bold text-purple-300">To Date</p>
+                            <input className="w-29 bg-card border border-violet-400 p-1 rounded-md [color-scheme:dark]" onChange={(e) => { setToDate(e.target.value) }} value={toDate} type="date" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-bold text-purple-300"> Min Amount</p>
+                            <input className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setMinAmt(e.target.value) }} value={minAmt} type="number" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-bold text-purple-300">Max Amount</p>
+                            <input className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setMaxAmt(e.target.value) }} value={maxAmt} type="number" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <p className="text-sm font-bold text-purple-300">From Date</p>
+                            <select className="w-29 bg-card border border-violet-400 p-1 rounded-md" onChange={(e) => { setSource(e.target.value) }}>
+                                <option value="Wallet">Wallet</option>
+                                <option value="Expense">Expense</option>
+                                <option value="Group">Group</option>
+                            </select>
+                        </div>
                     </div>
-                    {transactions.map((t, index) => (
-                        <div key={index}>
-                            <div className="hidden lg:grid grid-cols-[0.5fr_1.5fr_0.8fr_1.5fr_1fr_0.8fr_1fr] gap-3 px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
-                                <p className="text-[#8888A0]">{new Date(t.date).getDate()}-{new Date(t.date).getMonth() + 1}-{new Date(t.date).getFullYear()}</p>
-                                <p className="text-white font-medium truncate">{t.title}</p>
-                                <p className="text-[#C4C4CF]">{t.source}</p>
-                                <p className="text-[#C4C4CF]">{t.category} {t.categoryEmoji}</p>
-                                <p className="text-[#C4C4CF]">{t.type} {t.typeEmoji}</p>
-                                <p className={t.type === 'Credit' ? 'text-[#4ADE80] font-semibold' : 'text-[#F87171] font-semibold'}>Rs. {t.amount}</p>
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium w-fit ${getStatusBadge(t.status)}`}>{t.status}</span>
-                            </div>
-                            <div className="flex lg:hidden px-4 py-3 items-center justify-between hover:bg-white/[0.03]" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
+                }
+            </div>
+            <div className="flex flex-col gap-10">
+                <div className="flex gap-4 items-center">
+                    <img className="w-8 h-8" src={assets.transactions.TransactionsList}></img>
+                    <p className="text-xl font-bold text-purple-300">All Transactions</p>
+                </div>
+                <div className="border border-borderColour bg-black">
+                    <div className="hidden lg:grid grid-cols-[0.5fr_1.5fr_0.8fr_1.5fr_1fr_0.8fr_1fr] gap-3 font-bold p-2 bg-card border border-borderColour">
+                        <p>Date</p>
+                        <p>Title</p>
+                        <p>Source</p>
+                        <p>Category</p>
+                        <p>Type</p>
+                        <p>Amount</p>
+                        <p>Status</p>
+                    </div>
+                    {
+                        transactions.map((t, index) => {
+                            return (
+                                <div key={index}>
+                                    <div className="hidden lg:grid grid-cols-[0.5fr_1.5fr_0.8fr_1.5fr_1fr_0.8fr_1fr] gap-3 p-2 border border-borderColour hover:border-violet-400 transition-all duration-300">
+                                        <p>{new Date(t.date).getDate()}-{new Date(t.date).getMonth() + 1}-{new Date(t.date).getFullYear()}</p>
+                                        <p>{t.title}</p>
+                                        <p>{t.source}</p>
+                                        <p> {t.category} {t.categoryEmoji}</p>
+                                        <p>{t.type} {t.typeEmoji}</p>
+                                        <p>Rs. {t.amount}</p>
+                                        <p>{t.status}</p>
+                                    </div>
+                                    <div className="flex flex-col gap-3 lg:hidden">
+                                        <div className="px-5 py-2 flex items-center justify-between border border-borderColour hover:border-violet-400 transition-all duration-300">
+                                            <div>
+                                                <p>{t.title}</p>
+                                                <p>Rs. {t.amount}</p>
+                                            </div>
+                                            <button onClick={() => setSelectedTransaction(t)} className="border border-button py-1 px-2 rounded-full">VIEW</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    }
+                    {
+                        selectedTransaction &&
+                        <div className="fixed inset-0 z-50 flex justify-center items-center backdrop-blur-sm">
+                            <div className="bg-card border w-70 p-7 flex flex-col gap-3 rounded-xl">
+                                <p className="text-center text-purple-300 font-bold text-2xl"> Transaction </p>
                                 <div>
-                                    <p className="text-sm text-white font-medium">{t.title}</p>
-                                    <p className={`text-sm font-semibold ${t.type === 'Credit' ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>Rs. {t.amount}</p>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Date : </p>
+                                        <p>{new Date(selectedTransaction.date).getDate()}-{new Date(selectedTransaction.date).getMonth() + 1}-{new Date(selectedTransaction.date).getFullYear()}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Title :</p>
+                                        <p>{selectedTransaction.title}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Source :</p>
+                                        <p>{selectedTransaction.source}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Category :</p>
+                                        <p>{selectedTransaction.categoryEmoji} {selectedTransaction.category}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Type :</p>
+                                        <p>{selectedTransaction.type} {selectedTransaction.typeEmoji}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Amount :</p>
+                                        <p>Rs. {selectedTransaction.amount}</p>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <p className="font-bold text-purple-300">Status :</p>
+                                        <p>{selectedTransaction.status}</p>
+                                    </div>
                                 </div>
-                                <button onClick={() => setSelectedTransaction(t)} className="btn-secondary text-xs px-3 py-1.5">VIEW</button>
+                                <button onClick={() => setSelectedTransaction(null)} className="bg-button hover:bg-buttonHover p-1 w-full rounded-lg text-xl font-bold"> Close </button>
                             </div>
                         </div>
-                    ))}
-                    {transactions.length === 0 && (
-                        <div className="px-4 py-12 text-center">
-                            <p className="text-sm text-[#8888A0]">No transactions found for the selected filters.</p>
-                        </div>
-                    )}
+                    }
                 </div>
             </div>
-
-            {/* Mobile Bottom Sheet */}
-            {selectedTransaction && (
-                <div className="fixed inset-0 z-50 flex flex-col justify-end backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={() => setSelectedTransaction(null)}>
-                    <div className="slide-up rounded-t-2xl p-6 flex flex-col gap-4" style={{ background: '#0f0020', borderTop: '1px solid rgba(127,90,240,0.3)' }} onClick={e => e.stopPropagation()}>
-                        <div className="w-10 h-1 rounded-full mx-auto mb-2" style={{ background: 'rgba(127,90,240,0.4)' }}></div>
-                        <p className="text-center text-white font-bold text-xl">Transaction</p>
-                        <div className="flex flex-col gap-3">
-                            {[
-                                { label: 'Date', val: `${new Date(selectedTransaction.date).getDate()}-${new Date(selectedTransaction.date).getMonth() + 1}-${new Date(selectedTransaction.date).getFullYear()}` },
-                                { label: 'Title', val: selectedTransaction.title },
-                                { label: 'Source', val: selectedTransaction.source },
-                                { label: 'Category', val: `${selectedTransaction.categoryEmoji} ${selectedTransaction.category}` },
-                                { label: 'Type', val: `${selectedTransaction.type} ${selectedTransaction.typeEmoji}` },
-                                { label: 'Amount', val: `Rs. ${selectedTransaction.amount}` },
-                                { label: 'Status', val: selectedTransaction.status },
-                            ].map(({ label, val }) => (
-                                <div key={label} className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid rgba(127,90,240,0.1)' }}>
-                                    <p className="text-xs font-semibold text-[#8888A0] uppercase tracking-wider">{label}</p>
-                                    <p className="text-sm text-white">{val}</p>
-                                </div>
-                            ))}
-                        </div>
-                        <button onClick={() => setSelectedTransaction(null)} className="btn-primary w-full mt-2">Close</button>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
 
 export default Transactions
+

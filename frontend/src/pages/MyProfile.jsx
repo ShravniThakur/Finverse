@@ -5,9 +5,9 @@ import { toast } from 'react-toastify'
 import { useState } from "react"
 import { useEffect } from "react"
 import { assets } from "../assets/assets"
-import AssetIcon from "../components/AssetIcon"
 
 const MyProfile = () => {
+
     const { token, backend_url } = useContext(AppContext)
     const [user, setUser] = useState(null)
     const [name, setName] = useState('')
@@ -20,147 +20,143 @@ const MyProfile = () => {
 
     const getProfile = async () => {
         try {
-            const response = await axios.get(backend_url + '/user/get-profile', { headers: { Authorization: token } })
-            if (response.data.success) setUser(response.data.user)
+            const response = await axios.get(backend_url + '/user/get-profile', {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                setUser(response.data.user)
+            }
             else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
     }
+
     const changePasswordHandler = async (e) => {
         e.preventDefault()
         try {
-            const response = await axios.post(backend_url + '/user/change-password', { oldPassword, newPassword }, { headers: { Authorization: token } })
-            if (response.data.success) { toast.success(response.data.message); setChangePassword(false); setOldPassword(''); setNewPassword(''); getProfile() }
+            const response = await axios.post(backend_url + '/user/change-password', {
+                oldPassword,
+                newPassword
+            }, {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                toast.success(response.data.message)
+                setChangePassword(false)
+                setOldPassword('')
+                setNewPassword('')
+                getProfile()
+            }
             else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
     }
+
     const updateProfileHandler = async (e) => {
         e.preventDefault()
         const formData = new FormData()
         if (name) formData.append("name", name)
         if (email) formData.append("email", email)
         if (profilePic) formData.append("profilePic", profilePic)
+
         try {
-            const response = await axios.post(backend_url + '/user/update-profile', formData, { headers: { Authorization: token } })
-            if (response.data.success) { toast.success(response.data.message); setEdit(false); getProfile(); setProfilePic(null) }
+            const response = await axios.post(backend_url + '/user/update-profile', formData, {
+                headers: {
+                    Authorization: token
+                }
+            })
+            if (response.data.success) {
+                toast.success(response.data.message)
+                setEdit(false)
+                getProfile()
+                setProfilePic(null)
+            }
             else toast.error(response.data.message)
-        } catch (err) { toast.error(err.response.data.message) }
+        }
+        catch (err) {
+            toast.error(err.response.data.message)
+        }
     }
 
-    useEffect(() => { if (token) getProfile() }, [token])
-
-    const Modal = ({ title, onClose, children }) => (
-        <div className="flex justify-center items-center fixed inset-0 z-50 backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
-            <div className="glass-card p-6 w-80 sm:w-96 flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-                <p className="text-xl font-bold text-white text-center">{title}</p>
-                {children}
-            </div>
-        </div>
-    )
-
-    const hasProfilePic = user?.profilePic && !user.profilePic.includes('default') && user.profilePic !== ''
+    useEffect(() => {
+        if (token) {
+            getProfile()
+        }
+    }, [token])
 
     return (
-        <div className="flex flex-col gap-10 sm:gap-12 text-bodyText font-sans m-5 sm:m-7">
-            <div className="flex flex-col gap-1">
-                <p className="text-3xl font-bold text-white tracking-tight">My Profile</p>
-                <p className="text-sm text-[#8888A0]">Manage your account details and preferences</p>
-            </div>
-
-            {user && (
-                <div className="flex justify-center">
-                    <div className="glass-card p-8 w-full max-w-md flex flex-col items-center gap-6">
-                        {/* Avatar */}
-                        <div className="relative">
-                            {edit ? (
-                                <label htmlFor="profilePic" className="cursor-pointer block">
-                                    {profilePic ? (
-                                        <img className="w-24 h-24 rounded-full object-cover" src={URL.createObjectURL(profilePic)} alt="Profile" />
-                                    ) : hasProfilePic ? (
-                                        <img className="w-24 h-24 rounded-full object-cover" src={user.profilePic} alt="Profile" />
-                                    ) : (
-                                        <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white"
-                                            style={{ background: 'linear-gradient(135deg, #7F5AF0, #4B2A85)' }}>
-                                            {user.name?.[0]?.toUpperCase() || 'U'}
-                                        </div>
-                                    )}
-                                    <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#7F5AF0' }}>
-                                        <AssetIcon src={assets.myprofile.UploadArea} size={13} />
-                                    </div>
-                                </label>
-                            ) : (
-                                hasProfilePic ? (
-                                    <img className="w-24 h-24 rounded-full object-cover" src={user.profilePic} alt="Profile" />
-                                ) : (
-                                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white"
-                                        style={{ background: 'linear-gradient(135deg, #7F5AF0, #4B2A85)' }}>
-                                        {user.name?.[0]?.toUpperCase() || 'U'}
-                                    </div>
-                                )
-                            )}
-                            <input type="file" id="profilePic" onChange={e => setProfilePic(e.target.files[0])} hidden />
-                        </div>
-
-                        {/* Profile Fields */}
-                        <div className="w-full flex flex-col gap-3">
-                            {/* Name */}
-                            <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,90,240,0.15)' }}>
-                                <p className="text-xs font-semibold text-[#8888A0] uppercase tracking-wider mb-2">Name</p>
-                                {edit
-                                    ? <input value={name} onChange={e => setName(e.target.value)} className="fin-input" style={{ padding: '6px 10px' }} placeholder="Your name" />
-                                    : <p className="text-white font-medium">{user.name}</p>
+        <div className="flex flex-col gap-10 md:gap-15 text-bodyText font-serif m-3 md:m-5">
+            <p className="text-3xl font-bold"> My Profile 👤 </p>
+            <div className="flex justify-center">
+                {
+                    user &&
+                    <div className="w-70 px-5 py-10 md:p-10 md:w-145 flex flex-col justify-center items-center gap-5 md:flex-row md:gap-10 border border-gray-300 rounded-xl hover:scale-103  transition-all duration-300 shadow-[0_0_60px_rgba(168,85,247,0.6)]">
+                        {
+                            edit ?
+                                <div>
+                                    <label htmlFor="profilePic">
+                                        <img className="w-50 h-50 rounded-xl" src={profilePic ? URL.createObjectURL(profilePic) : user.profilePic}></img>
+                                    </label>
+                                    <input type="file" id="profilePic" onChange={(e) => { setProfilePic(e.target.files[0]) }} hidden />
+                                </div>
+                                :
+                                <img className="w-50 h-50 rounded-xl" src={user.profilePic}></img>
+                        }
+                        <div className="w-60 flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <p className="font-bold text-purple-300">Name</p>
+                                {
+                                    edit ? <input className="p-1 border border-gray-300 w-60 rounded-md" value={name} onChange={(e) => { setName(e.target.value) }} /> : <p>{user.name}</p>
                                 }
                             </div>
-                            {/* Email */}
-                            <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(127,90,240,0.15)' }}>
-                                <p className="text-xs font-semibold text-[#8888A0] uppercase tracking-wider mb-2">Email</p>
-                                {edit
-                                    ? <input value={email} onChange={e => setEmail(e.target.value)} className="fin-input" style={{ padding: '6px 10px' }} placeholder="Your email" />
-                                    : <p className="text-white font-medium">{user.email}</p>
+                            <div className="flex flex-col gap-1">
+                                <p className="font-bold text-purple-300">Email</p>
+                                {
+                                    edit ? <input className="p-1 border border-gray-300 w-60 rounded-md" value={email} onChange={(e) => { setEmail(e.target.value) }} /> : <p>{user.email}</p>
                                 }
                             </div>
-                        </div>
+                            {
+                                edit ? <button className="bg-button px-2 py-1 text-center rounded-full font-bold w-60" onClick={updateProfileHandler}> SAVE </button> : <button className="bg-button px-2 py-1 text-center rounded-full font-bold w-60" onClick={() => { setEdit(true); setName(user.name); setEmail(user.email) }}> EDIT </button>
+                            }
+                            {
+                                !edit && <div onClick={() => { setChangePassword(true) }} className="bg-button px-2 py-1  text-center rounded-full font-bold">
+                                    Change Password
+                                </div>
+                            }
 
-                        {/* Action Buttons */}
-                        <div className="w-full flex flex-col gap-3">
-                            {edit ? (
-                                <>
-                                    <button onClick={updateProfileHandler} className="btn-primary w-full">Save Changes</button>
-                                    <button onClick={() => { setEdit(false); setProfilePic(null) }} className="btn-secondary w-full">Cancel</button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={() => { setEdit(true); setName(user.name); setEmail(user.email) }}
-                                        className="btn-primary w-full flex items-center justify-center gap-2">
-                                        <AssetIcon src={assets.budget.Edit} size={15} /> Edit Profile
-                                    </button>
-                                    <button onClick={() => setChangePassword(true)}
-                                        className="btn-secondary w-full flex items-center justify-center gap-2">
-                                        <AssetIcon src={assets.wallet.SetPin} size={15} /> Change Password
-                                    </button>
-                                </>
-                            )}
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Change Password Modal */}
-            {changePassword && (
-                <Modal title={<>Change <span className="text-[#7F5AF0]">Password</span></>} onClose={() => setChangePassword(false)}>
-                    <form onSubmit={changePasswordHandler} className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium text-[#8888A0]">Old Password</p>
-                            <input type="password" onChange={e => setOldPassword(e.target.value)} className="fin-input" value={oldPassword} placeholder="Enter old password" />
+                }
+                {
+                    changePassword && <div className="flex justify-center items-center fixed inset-0 z-50 backdrop-blur-sm">
+                        <div className="w-70 sm:p-10 sm:w-100 bg-card rounded-xl border border-gray-300 p-7 flex flex-col gap-7">
+                            <p className="text-2xl sm:text-3xl font-bold text-center"> Change <span className="text-purple-300"> Password </span> </p>
+                            <form onSubmit={changePasswordHandler} className="flex flex-col gap-7">
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-left text-sm sm:text-base font-bold">Old Password</p>
+                                    <input type="password" onChange={(e) => { setOldPassword(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-8 sm:h-9 rounded-md w-full p-1" value={oldPassword} />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-left text-sm sm:text-base font-bold">New Password</p>
+                                    <input type="password" onChange={(e) => { setNewPassword(e.target.value) }} className="text-sm sm:text-base border border-gray-300 h-8 sm:h-9 rounded-md w-full p-1" value={newPassword} />
+                                </div>
+                                <div className="flex flex-col gap-3 font-bold text-sm sm:text-lg">
+                                    <button type="submit" className="bg-button p-1 hover:bg-buttonHover rounded-md"> Change Password </button>
+                                    <button type="button" onClick={() => { setChangePassword(false) }} className="bg-button p-1 hover:bg-buttonHover rounded-md"> Cancel </button>
+                                </div>
+                            </form>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium text-[#8888A0]">New Password</p>
-                            <input type="password" onChange={e => setNewPassword(e.target.value)} className="fin-input" value={newPassword} placeholder="Enter new password" />
-                        </div>
-                        <button type="submit" className="btn-primary w-full">Update Password</button>
-                        <button type="button" onClick={() => setChangePassword(false)} className="btn-secondary w-full">Cancel</button>
-                    </form>
-                </Modal>
-            )}
+                    </div>
+                }
+            </div>
         </div>
     )
 }
